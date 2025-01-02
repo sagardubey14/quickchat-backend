@@ -4,6 +4,7 @@ const app = require('./app');
 const socketHandler = require('./socket/socketHandler');
 
 const server = http.createServer(app);
+
 const io = new Server(server, {
     cors: {
         origin: "http://localhost:5173",
@@ -12,6 +13,12 @@ const io = new Server(server, {
 
 io.on('connection', socketHandler);
 
+setInterval(()=>{
+    console.log(io.of("/").adapter.rooms);
+},10000)
+
+
 server.listen(3000, () => {
     console.log('Server running on http://localhost:3000');
 });
+
