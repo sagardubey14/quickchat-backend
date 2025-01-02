@@ -1,4 +1,4 @@
-const { chatMessage, disconnect, groupFormation } = require('../controllers/messageController');
+const { chatMessage, disconnect, groupFormation, groupMessage } = require('../controllers/messageController');
 const { handleConnect } = require('../services/messageService');
 
 const socketHandler = (socket) => {
@@ -15,7 +15,12 @@ const socketHandler = (socket) => {
     });
 
     socket.on('chat-message', (msg) => {
-        chatMessage(socket, msg);
+        if(msg.isGroup){
+            groupMessage(socket, msg.msg);
+        }else{
+            chatMessage(socket, msg.msg);
+        }
+        
     });
 
     socket.on('disconnect', () => {

@@ -7,15 +7,16 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:5173",
+        origin: [
+            "http://localhost:5173",
+            "http://192.168.220.134:5173"
+        ],
+        methods: ["GET", "POST"],
     }
 });
 
 io.on('connection', socketHandler);
 
-setInterval(()=>{
-    console.log(io.of("/").adapter.rooms);
-},10000)
 
 
 server.listen(3000, () => {

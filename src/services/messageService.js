@@ -1,7 +1,5 @@
-
 let { messageStatus, onlineUsers, pendingMsg, pendingGroup } = require("../models/queue");
-const { registerUserToGroup, getGroupID } = require("./userService");
-
+let Group = require('../models/groupModel')
 
 const handleRoomJoining = (socket, grpDetail, pending = false)=>{
     console.log(socket.handshake.query.username);
@@ -14,10 +12,9 @@ const handleRoomJoining = (socket, grpDetail, pending = false)=>{
 
 const handleGroupFormation = (socket, grpDetail)=>{
     console.log(grpDetail);
-    registerUserToGroup(grpDetail.id, grpDetail.members);
+    Group[grpDetail.id] = grpDetail.members;
     grpDetail.members.forEach((username)=>{
-        const user = onlineUsers.find(u=> u.username === username);
-        if(!user){
+        if(!onlineUsers.includes(username)){
             console.log(`${username} is not online`);
             if(!pendingGroup[username]){
                 pendingGroup[username] = [grpDetail];
@@ -30,29 +27,43 @@ const handleGroupFormation = (socket, grpDetail)=>{
     })
 }
 
-const handleChatMessage = (socket, msg) => {
-
-    if(!onlineUsers.some(user=> user.username === msg.receiver)){
-        if(!pendingMsg[msg.receiver]){
-            pendingMsg[msg.receiver] = [msg];
+const handleGroupMessage = (socket, msg)=>{
+    console.log(msg, socket.handshake.query.username);
+    console.log(Group[msg.receiver]);
+    let finalMsg = {msg, receiver:msg.receiver}
+    Group[msg.receiver].forEach(mem=>{
+        if(!onlineUsers.includes(mem)){
+            if(!pendingMsg[mem]){
+                pendingMsg[mem] = [finalMsg];
+            }else{
+                pendingMsg[mem].push(finalMsg);
+            }
         }else{
-            pendingMsg[msg.receiver].push(msg);
+            socket.broadcast.emit(`msg-for-${mem}`, finalMsg);
+        }
+    })
+    console.log(pendingMsg);
+}
+
+const handleChatMessage = (socket, msg) => {
+    let finalMsg = {msg, receiver:null}
+    if(!onlineUsers.some(user=> user === msg.receiver)){
+        if(!pendingMsg[msg.receiver]){
+            pendingMsg[msg.receiver] = [finalMsg];
+        }else{
+            pendingMsg[msg.receiver].push(finalMsg);
         }
     }else{
-        socket.broadcast.emit(`msg-for-${msg.receiver}`, msg);
+        socket.broadcast.emit(`msg-for-${msg.receiver}`, finalMsg);
     }
+    console.log(pendingMsg);
 };
 
 const handleConnect = (socket) => {
     console.log(socket.id);
     const username = socket.handshake.query.username
-    onlineUsers.push({username, socketID: socket.id});
-    const group = getGroupID(username);
+    onlineUsers.push(username);
     console.log(onlineUsers);
-    
-    group.forEach(grpID => {
-        socket.join(grpID)
-    });
 
     if(pendingGroup[username]){
         pendingGroup[username].forEach(grpDetail=>{
@@ -68,9 +79,9 @@ const handleConnect = (socket) => {
 };
 
 const handleDisconnect = (socket) => {
-    onlineUsers = onlineUsers.filter(user => user.username !== socket.handshake.query.username);
+    onlineUsers = onlineUsers.filter(user => user !== socket.handshake.query.username);
     console.log(onlineUsers.length , '- users online');
     socket.removeAllListeners();
 };
 
-module.exports = { handleChatMessage, handleConnect, handleDisconnect, handleGroupFormation };
+module.exports = { handleChatMessage, handleConnect, handleDisconnect, handleGroupFormation, handleGroupMessage };
