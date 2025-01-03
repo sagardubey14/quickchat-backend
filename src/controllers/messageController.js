@@ -1,4 +1,4 @@
-const { handleChatMessage, handleDisconnect, handleGroupFormation, handleGroupMessage } = require('../services/messageService');
+const { handleChatMessage, handleDisconnect, handleGroupFormation, handleGroupMessage, handleUserStatus } = require('../services/messageService');
 
 const groupFormation = (socket, grpDetail)=>{
     handleGroupFormation(socket, grpDetail)
@@ -15,5 +15,6 @@ const chatMessage = (socket, msg) => {
 const disconnect = (socket) => {
     handleDisconnect(socket);
 };
+
 
 module.exports = { chatMessage, disconnect, groupFormation, groupMessage };

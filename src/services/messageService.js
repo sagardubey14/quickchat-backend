@@ -1,5 +1,6 @@
 let { messageStatus, onlineUsers, pendingMsg, pendingGroup } = require("../models/queue");
-let Group = require('../models/groupModel')
+let Group = require('../models/groupModel');
+const { setLastSeen, getUsersByUsername, getLastSeen } = require("./userService");
 
 const handleRoomJoining = (socket, grpDetail, pending = false)=>{
     console.log(socket.handshake.query.username);
@@ -60,7 +61,6 @@ const handleChatMessage = (socket, msg) => {
 };
 
 const handleConnect = (socket) => {
-    console.log(socket.id);
     const username = socket.handshake.query.username
     onlineUsers.push(username);
     console.log(onlineUsers);
@@ -80,8 +80,19 @@ const handleConnect = (socket) => {
 
 const handleDisconnect = (socket) => {
     onlineUsers = onlineUsers.filter(user => user !== socket.handshake.query.username);
+    setLastSeen(socket.handshake.query.username);
     console.log(onlineUsers.length , '- users online');
     socket.removeAllListeners();
 };
 
-module.exports = { handleChatMessage, handleConnect, handleDisconnect, handleGroupFormation, handleGroupMessage };
+const handleUserStatus = (socket, username, callback)=>{
+    console.log(callback ,'handleUserStatus');
+    if(onlineUsers.includes(username)){
+        callback({status:'online'});
+    }else{
+        let time = getLastSeen(username);
+        callback({status:'offline', time});
+    }
+}
+
+module.exports = { handleChatMessage, handleConnect, handleDisconnect, handleGroupFormation, handleGroupMessage, handleUserStatus };

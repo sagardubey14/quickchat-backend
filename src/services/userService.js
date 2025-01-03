@@ -12,4 +12,15 @@ const getUsersByUsername = (username) => {
     return Users.filter(user => user.username.startsWith(username)).map(user=> user.username);
 };
 
-module.exports = { registerUser, loginUser, getUsersByUsername };
+const setLastSeen = (username)=>{
+    let user = Users.find(user => user.username === username);
+    user.lastOnline = new Date().toISOString();
+    console.log(`Updated lastOnline for ${username}: ${user.lastOnline}`);
+}
+
+const getLastSeen = (username)=>{
+
+    return Users.find(user => user.username === username).lastOnline;
+}
+
+module.exports = { registerUser, loginUser, getUsersByUsername, setLastSeen, getLastSeen };
