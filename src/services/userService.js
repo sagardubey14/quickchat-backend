@@ -36,7 +36,9 @@ const setLastSeen = (username)=>{
 }
 
 const getLastSeen = (username)=>{
-    return Users.find(user => user.username === username).lastOnline;
+    let seen = Users.find(user => user.username === username)
+    console.log(username,seen.lastOnline , 'get Last seen');
+    return seen.lastOnline?seen.lastOnline:new Date().toISOString();
 }
 
 module.exports = { registerUser, loginUser, getUsersByUsername, setLastSeen, getLastSeen, getUserDataToAdmin };

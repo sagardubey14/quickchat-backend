@@ -13,6 +13,8 @@ const handleRoomJoining = (socket, grpDetail, pending = false)=>{
 const handleLeaveGroup = (req, res) =>{
     const groupName = req.params.groupName;
     const username = req.params.username;
+    // console.log(groupName, username ,'leave group');
+    
     if(!Group[groupName]){
         res.status(400).json({ message: `Group '${groupName} not found'` });
     }else{
@@ -50,12 +52,12 @@ const handleGroupFormation = (socket, grpDetail)=>{
             handleRoomJoining(socket, grpDetail);
         }
     })
-    console.log(Group);
+    // console.log(Group);
     
 }
 
 const handleGroupMessage = (socket, msg, grpID)=>{
-    let finalMsg = {msg, receiver:msg.receiver}
+    let finalMsg = {msg, receiver:msg.receiver, grpID}
     Group[grpID].forEach(mem=>{
         if(!onlineUsers.includes(mem)){
             if(!pendingMsg[mem]){
@@ -95,12 +97,13 @@ const getQueueDataToAdmin = (key)=>{
 const handleConnect = (socket) => {
     const username = socket.handshake.query.username
     onlineUsers.push(username);
-    console.log(onlineUsers);
+    // console.log(onlineUsers);
 
     if(pendingGroup[username]){
         pendingGroup[username].forEach(grpDetail=>{
             handleRoomJoining(socket, grpDetail, true);
         })
+        delete pendingGroup[username];
     }
     if(pendingMsg[username]){
         socket.emit(`pending-msg-${username}`, pendingMsg[username])

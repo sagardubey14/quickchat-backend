@@ -21,6 +21,7 @@ const socketHandler = (socket) => {
             socket.broadcast.emit(`user-typing-at-${msg.chat}`, true);
         }else{
             if(msg.grpDetail.isGroup){
+                // console.log('grp-msg - socketHandler', msg);
                 groupMessage(socket, msg.msg, msg.grpDetail.grpID);
             }else{
                 chatMessage(socket, msg.msg);
