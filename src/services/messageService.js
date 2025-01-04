@@ -11,6 +11,22 @@ const handleRoomJoining = (socket, grpDetail, pending = false)=>{
     }
 }
 
+const hadnleMsgStatus = (socket, msgDetail)=>{
+    console.log('inside msg status');
+    
+    const { msgId, sender, receiver, status} = msgDetail;
+    if(!onlineUsers.includes(sender)){
+        if(!messageStatus[sender]){
+            messageStatus[sender] = [{msgId, receiver, status}];
+        }else{
+            messageStatus[sender].push({msgId, receiver, status});
+        }
+    }else{
+        console.log(`msg-status-${sender}`);
+        socket.broadcast.emit(`msg-status-${sender}`,{msgId, receiver, status});
+    }
+}
+
 const handleGroupFormation = (socket, grpDetail)=>{
     console.log(grpDetail);
     Group[grpDetail.id] = grpDetail.members;
@@ -47,6 +63,7 @@ const handleGroupMessage = (socket, msg)=>{
 }
 
 const handleChatMessage = (socket, msg) => {
+    let sender = socket.handshake.query.username;
     let finalMsg = {msg, receiver:null}
     if(!onlineUsers.some(user=> user === msg.receiver)){
         if(!pendingMsg[msg.receiver]){
@@ -57,7 +74,7 @@ const handleChatMessage = (socket, msg) => {
     }else{
         socket.broadcast.emit(`msg-for-${msg.receiver}`, finalMsg);
     }
-    console.log(pendingMsg);
+    // console.log(pendingMsg);
 };
 
 const handleConnect = (socket) => {
@@ -86,7 +103,7 @@ const handleDisconnect = (socket) => {
 };
 
 const handleUserStatus = (socket, username, callback)=>{
-    console.log(callback ,'handleUserStatus');
+    // console.log(callback ,'handleUserStatus');
     if(onlineUsers.includes(username)){
         callback({status:'online'});
     }else{
@@ -95,4 +112,4 @@ const handleUserStatus = (socket, username, callback)=>{
     }
 }
 
-module.exports = { handleChatMessage, handleConnect, handleDisconnect, handleGroupFormation, handleGroupMessage, handleUserStatus };
+module.exports = { handleChatMessage, handleConnect, handleDisconnect, handleGroupFormation, handleGroupMessage, handleUserStatus, hadnleMsgStatus };

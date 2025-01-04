@@ -1,5 +1,5 @@
 const { chatMessage, disconnect, groupFormation, groupMessage } = require('../controllers/messageController');
-const { handleConnect, handleUserStatus } = require('../services/messageService');
+const { handleConnect, handleUserStatus, hadnleMsgStatus } = require('../services/messageService');
 
 const socketHandler = (socket) => {
     console.log('A user connected');
@@ -12,6 +12,11 @@ const socketHandler = (socket) => {
         // console.log(callback);
         handleUserStatus(socket, username, callback);
         
+    })
+
+    socket.on('msg-status',(msg)=>{
+        console.log(msg ,'inside on');
+        hadnleMsgStatus(socket, msg);
     })
 
     socket.on('chat-message', (msg) => {

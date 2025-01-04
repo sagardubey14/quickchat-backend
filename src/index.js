@@ -23,3 +23,12 @@ server.listen(3000, () => {
     console.log('Server running on http://localhost:3000');
 });
 
+// setInterval(() => {
+//     const memoryUsage = process.memoryUsage();
+//     console.log('Memory Usage:', memoryUsage);
+//     console.log(`RSS: ${memoryUsage.rss / (1024 * 1024)} MB`);
+//     console.log(`Heap Total: ${memoryUsage.heapTotal / (1024 * 1024)} MB`);
+//     console.log(`Heap Used: ${memoryUsage.heapUsed / (1024 * 1024)} MB`);
+//     console.log(`External: ${memoryUsage.external / (1024 * 1024)} MB`);
+//     console.log('----------------------------');
+// }, 10000);
