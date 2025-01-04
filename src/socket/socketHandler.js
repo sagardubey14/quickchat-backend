@@ -9,25 +9,23 @@ const socketHandler = (socket) => {
         groupFormation(socket, grpDetail);
     })
     socket.on('user-status',(username, callback)=>{
-        // console.log(callback);
         handleUserStatus(socket, username, callback);
-        
     })
 
     socket.on('msg-status',(msg)=>{
-        console.log(msg ,'inside on');
         hadnleMsgStatus(socket, msg);
     })
 
     socket.on('chat-message', (msg) => {
-        // console.log(msg);
-        
-        if(msg.isGroup){
-            groupMessage(socket, msg.msg);
+        if(msg.typing){
+            socket.broadcast.emit(`user-typing-at-${msg.chat}`, true);
         }else{
-            chatMessage(socket, msg.msg);
+            if(msg.grpDetail.isGroup){
+                groupMessage(socket, msg.msg, msg.grpDetail.grpID);
+            }else{
+                chatMessage(socket, msg.msg);
+            }
         }
-        
     });
 
     socket.on('disconnect', () => {

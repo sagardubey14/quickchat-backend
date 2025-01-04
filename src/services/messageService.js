@@ -3,7 +3,6 @@ let Group = require('../models/groupModel');
 const { setLastSeen, getUsersByUsername, getLastSeen } = require("./userService");
 
 const handleRoomJoining = (socket, grpDetail, pending = false)=>{
-    console.log(socket.handshake.query.username);
     if(pending){
         socket.emit(`group-formation`, grpDetail);
     }else{
@@ -11,9 +10,21 @@ const handleRoomJoining = (socket, grpDetail, pending = false)=>{
     }
 }
 
+const handleLeaveGroup = (req, res) =>{
+    const groupName = req.params.groupName;
+    const username = req.params.username;
+    if(!Group[groupName]){
+        res.status(400).json({ message: `Group '${groupName} not found'` });
+    }else{
+        Group[groupName] = Group[groupName].filter(user => user!==username);
+        if(Group[groupName].length === 0){
+            delete Group[groupName];
+        }
+    }
+    res.status(200).json({ message: `User '${username}' successfully removed from group '${groupName}'` });
+}
+
 const hadnleMsgStatus = (socket, msgDetail)=>{
-    console.log('inside msg status');
-    
     const { msgId, sender, receiver, status} = msgDetail;
     if(!onlineUsers.includes(sender)){
         if(!messageStatus[sender]){
@@ -22,17 +33,14 @@ const hadnleMsgStatus = (socket, msgDetail)=>{
             messageStatus[sender].push({msgId, receiver, status});
         }
     }else{
-        console.log(`msg-status-${sender}`);
         socket.broadcast.emit(`msg-status-${sender}`,{msgId, receiver, status});
     }
 }
 
 const handleGroupFormation = (socket, grpDetail)=>{
-    console.log(grpDetail);
     Group[grpDetail.id] = grpDetail.members;
     grpDetail.members.forEach((username)=>{
         if(!onlineUsers.includes(username)){
-            console.log(`${username} is not online`);
             if(!pendingGroup[username]){
                 pendingGroup[username] = [grpDetail];
             }else{
@@ -42,13 +50,13 @@ const handleGroupFormation = (socket, grpDetail)=>{
             handleRoomJoining(socket, grpDetail);
         }
     })
+    console.log(Group);
+    
 }
 
-const handleGroupMessage = (socket, msg)=>{
-    console.log(msg, socket.handshake.query.username);
-    console.log(Group[msg.receiver]);
+const handleGroupMessage = (socket, msg, grpID)=>{
     let finalMsg = {msg, receiver:msg.receiver}
-    Group[msg.receiver].forEach(mem=>{
+    Group[grpID].forEach(mem=>{
         if(!onlineUsers.includes(mem)){
             if(!pendingMsg[mem]){
                 pendingMsg[mem] = [finalMsg];
@@ -59,11 +67,9 @@ const handleGroupMessage = (socket, msg)=>{
             socket.broadcast.emit(`msg-for-${mem}`, finalMsg);
         }
     })
-    console.log(pendingMsg);
 }
 
 const handleChatMessage = (socket, msg) => {
-    let sender = socket.handshake.query.username;
     let finalMsg = {msg, receiver:null}
     if(!onlineUsers.some(user=> user === msg.receiver)){
         if(!pendingMsg[msg.receiver]){
@@ -74,8 +80,17 @@ const handleChatMessage = (socket, msg) => {
     }else{
         socket.broadcast.emit(`msg-for-${msg.receiver}`, finalMsg);
     }
-    // console.log(pendingMsg);
 };
+
+const getQueueDataToAdmin = (key)=>{
+    if(key === 'queue')
+        return {Queue:{messageStatus, onlineUsers, pendingMsg, pendingGroup}};
+    else if(key === 'group')
+        return {Group};
+    else{
+        return { Queue:{messageStatus, onlineUsers, pendingMsg, pendingGroup}, Group};
+    }
+}
 
 const handleConnect = (socket) => {
     const username = socket.handshake.query.username
@@ -91,19 +106,15 @@ const handleConnect = (socket) => {
         socket.emit(`pending-msg-${username}`, pendingMsg[username])
         delete pendingMsg[username];
     }
-
-    console.log('Count - ',onlineUsers.length);
 };
 
 const handleDisconnect = (socket) => {
     onlineUsers = onlineUsers.filter(user => user !== socket.handshake.query.username);
     setLastSeen(socket.handshake.query.username);
-    console.log(onlineUsers.length , '- users online');
     socket.removeAllListeners();
 };
 
 const handleUserStatus = (socket, username, callback)=>{
-    // console.log(callback ,'handleUserStatus');
     if(onlineUsers.includes(username)){
         callback({status:'online'});
     }else{
@@ -112,4 +123,4 @@ const handleUserStatus = (socket, username, callback)=>{
     }
 }
 
-module.exports = { handleChatMessage, handleConnect, handleDisconnect, handleGroupFormation, handleGroupMessage, handleUserStatus, hadnleMsgStatus };
+module.exports = { handleChatMessage, handleConnect, handleDisconnect, handleGroupFormation, handleGroupMessage, handleUserStatus, hadnleMsgStatus, handleLeaveGroup, getQueueDataToAdmin };

@@ -4,8 +4,8 @@ const groupFormation = (socket, grpDetail)=>{
     handleGroupFormation(socket, grpDetail)
 }
 
-const groupMessage = (socket, msg) => {
-    handleGroupMessage(socket, msg);
+const groupMessage = (socket, msg, grpID) => {
+    handleGroupMessage(socket, msg, grpID);
 };
 
 const chatMessage = (socket, msg) => {

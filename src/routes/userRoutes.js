@@ -1,7 +1,9 @@
 const express = require('express');
-const { getUsers } = require('../controllers/userController');
+const { getUsers, leaveGroup, getDataToAdmin } = require('../controllers/userController');
 const router = express.Router();
 
 router.get('/users', getUsers);
+router.delete('/groups/:groupName/users/:username', leaveGroup);
+router.get('/data', getDataToAdmin);
 
 module.exports = router;

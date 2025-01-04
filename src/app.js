@@ -3,16 +3,12 @@ const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const socketHandler = require('./socket/socketHandler');
-
+require('dotenv').config();
 
 const app = express();
 
-const allowedOrigins = [
-    "http://localhost:5173",   // Local origin
-    "http://192.168.220.134:5173"  // Network origin
-];
+const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(','): [];
 
-// CORS options for Express
 const corsOptions = {
     origin: function (origin, callback) {
         if (allowedOrigins.includes(origin) || !origin) {

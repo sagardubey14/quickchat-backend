@@ -1,14 +1,24 @@
 const { registerUser, loginUser } = require('../services/userService');
+require('dotenv').config();
 
 const register = (req, res) => {
-    registerUser(req.body);
-    res.send({ message: 'User has registered successfully!' });
+    let {message, status} = registerUser(req.body);
+    res.status(status).json({ message});
 };
 
 const login = (req, res) => {
     const { email, pass } = req.body;
-    const user = loginUser(email, pass);
-    res.send({ username: user.username });
+    const { message, status, username} = loginUser(email, pass);
+    res.status(status).json({ message, username});
 };
 
-module.exports = { register, login };
+const verify = (req, res)=>{
+    const { pass } = req.body;
+    
+    if(pass === process.env.ADMIN_PASS)
+        res.status(200).json({username:`${process.env.ADMIN_USER}`});
+    else
+        res.status(401).json({message:'NOT ALLOWED'});
+}
+
+module.exports = { register, login, verify };
